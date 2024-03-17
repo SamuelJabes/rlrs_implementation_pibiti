@@ -4,3 +4,5 @@ numpy
 tensorflow
 scikit-learn
 scipy
+python-dotenv
+langchain_openai

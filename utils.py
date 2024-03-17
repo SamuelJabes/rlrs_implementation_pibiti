@@ -9,7 +9,7 @@ def load_data(DATA_DIR, dataset):
     '''load the MovieLens 1m dataset in a Pandas dataframe'''
     if dataset == "ratings.dat":
         ratings = pd.read_csv(os.path.join(DATA_DIR, dataset), delimiter='::', header=None, 
-            names=['UserID', 'Movie_ID', 'Rating', 'Timestamp'], engine='python')
+            names=['UserID', 'MovieID', 'Rating', 'Timestamp'], engine='python')
         return ratings
     elif dataset == "movies.dat":
         movies = pd.read_csv(os.path.join(DATA_DIR, dataset), delimiter='::', header=None, 
