@@ -10,8 +10,15 @@ from state_representation import DRRAveStateRepresentation
 from datetime import datetime
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import os
 import wandb
+
+movies_id_to_ebs = pd.read_csv("./data/movies_with_descriptions_and_embeddings_256.csv")
+movies_id_to_ebs.drop(columns=['Unnamed: 0', 'Title', 'Genres', 'Description'], inplace=True)
+
+users_id_to_ebs = pd.read_csv("./data/users_with_descriptions_and_embeddings_256.csv")
+users_id_to_ebs.drop(columns=["Unnamed: 0", "Description_User"], inplace=True)
 
 class DRRAgent:
     
@@ -21,8 +28,11 @@ class DRRAgent:
 
         self.users_num = users_num
         self.items_num = items_num
+
+        self.users_id_to_ebs = users_id_to_ebs
+        self.movies_id_to_ebs = movies_id_to_ebs
         
-        self.embedding_dim = 100
+        self.embedding_dim = 256
         self.actor_hidden_dim = 128
         self.actor_learning_rate = 0.001
         self.critic_hidden_dim = 128
@@ -40,19 +50,19 @@ class DRRAgent:
         # self.m_embedding_network([np.zeros((1,)),np.zeros((1,))])
         # self.m_embedding_network.load_weights('/home/diominor/Workspace/DRR/save_weights/m_g_model_weights.h5')
 
-        self.embedding_network = UserMovieEmbedding(users_num, items_num, self.embedding_dim)
-        self.embedding_network([np.zeros((1,)),np.zeros((1,))])
-        # self.embedding_network = UserMovieEmbedding(users_num, self.embedding_dim)
-        # self.embedding_network([np.zeros((1)),np.zeros((1,100))])
-        self.save_model_weight_dir = f"./save_model/trail-{datetime.now().strftime('%Y-%m-%d-%H')}"
-        if not os.path.exists(self.save_model_weight_dir):
-            os.makedirs(os.path.join(self.save_model_weight_dir, 'imagess'))
-        embedding_save_file_dir = './save_weights/user_movie_embedding_case4.h5'
-        assert os.path.exists(embedding_save_file_dir), f"embedding save file directory: '{embedding_save_file_dir}' is wrong."
-        self.embedding_network.load_weights(embedding_save_file_dir)
+        # self.embedding_network = UserMovieEmbedding(users_num, items_num, self.embedding_dim)
+        # self.embedding_network([np.zeros((1,)),np.zeros((1,))])
+        # # self.embedding_network = UserMovieEmbedding(users_num, self.embedding_dim)
+        # # self.embedding_network([np.zeros((1)),np.zeros((1,100))])
+        # self.save_model_weight_dir = f"./save_model/trail-{datetime.now().strftime('%Y-%m-%d-%H')}"
+        # if not os.path.exists(self.save_model_weight_dir):
+        #     os.makedirs(os.path.join(self.save_model_weight_dir, 'imagess'))
+        # embedding_save_file_dir = './save_weights/user_movie_embedding_case4.h5'
+        # assert os.path.exists(embedding_save_file_dir), f"embedding save file directory: '{embedding_save_file_dir}' is wrong."
+        # self.embedding_network.load_weights(embedding_save_file_dir)
 
         self.srm_ave = DRRAveStateRepresentation(self.embedding_dim)
-        self.srm_ave([np.zeros((1, 100,)),np.zeros((1,state_size, 100))])
+        self.srm_ave([np.zeros((1, 256,)),np.zeros((1,state_size, 256))])
 
         # PER
         self.buffer = PriorityExperienceReplay(self.replay_memory_size, self.embedding_dim)
@@ -94,7 +104,9 @@ class DRRAgent:
         if items_ids == None:
             items_ids = np.array(list(set(i for i in range(self.items_num)) - recommended_items))
 
-        items_ebs = self.embedding_network.get_layer('movie_embedding')(items_ids)
+        items_ebs = movies_id_to_ebs.loc[items_ids]
+        items_ebs = items_ebs.iloc[:, 1:]
+        items_ebs = items_ebs.to_numpy()
         # items_ebs = self.m_embedding_network.get_layer('movie_embedding')(items_ids)
         action = tf.transpose(action, perm=(1,0))
         if top_k:
