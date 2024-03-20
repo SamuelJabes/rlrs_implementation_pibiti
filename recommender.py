@@ -62,7 +62,7 @@ class DRRAgent:
         # self.embedding_network.load_weights(embedding_save_file_dir)
 
         self.srm_ave = DRRAveStateRepresentation(self.embedding_dim)
-        self.srm_ave([np.zeros((1, 256,)),np.zeros((1,state_size, 256))])
+        #self.srm_ave([np.zeros((1, 256,)),np.zeros((state_size, 256))])
 
         # PER
         self.buffer = PriorityExperienceReplay(self.replay_memory_size, self.embedding_dim)
