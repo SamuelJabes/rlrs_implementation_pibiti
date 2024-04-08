@@ -70,7 +70,7 @@ class DRRAgent:
 
         # ε-탐욕 탐색 하이퍼파라미터 ε-greedy exploration hyperparameter
         self.epsilon = 1.
-        self.epsilon_decay = (self.epsilon - 0.1)/500000
+        self.epsilon_decay = (self.epsilon - 0.1)/625000
         self.std = 1.5
 
         self.is_test = is_test
@@ -109,6 +109,8 @@ class DRRAgent:
         items_ebs = items_ebs.to_numpy()
         # items_ebs = self.m_embedding_network.get_layer('movie_embedding')(items_ids)
         action = tf.transpose(action, perm=(1,0))
+        items_ebs = tf.convert_to_tensor(items_ebs)
+        action = tf.cast(action, items_ebs.dtype)
         if top_k:
             item_indice = np.argsort(tf.transpose(tf.keras.backend.dot(items_ebs, action), perm=(1,0)))[0][-top_k:]
             return items_ids[item_indice]
