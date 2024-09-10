@@ -14,11 +14,12 @@ import pandas as pd
 import os
 import wandb
 import csv
+import json
 
-movies_id_to_ebs = pd.read_csv("./data/movies_with_descriptions_and_embeddings_256.csv")
-movies_id_to_ebs.drop(columns=['Unnamed: 0', 'Title', 'Genres', 'Description'], inplace=True)
+movies_id_to_ebs = pd.read_csv("./data/movies/movies_with_descriptions_and_embeddings_256_new.csv")
+movies_id_to_ebs.drop(columns=['Unnamed: 0', 'Title', 'Genres'], inplace=True)
 
-users_id_to_ebs = pd.read_csv("./data/users_with_descriptions_and_embeddings_256.csv")
+users_id_to_ebs = pd.read_csv("./data//users/users_with_descriptions_and_embeddings_256_new.csv")
 users_id_to_ebs.drop(columns=["Unnamed: 0", "Description_User"], inplace=True)
 
 class DRRAgent:
@@ -364,7 +365,8 @@ class DRRAgent:
             if (episode+1)%1000 == 0 or episode == max_episode_num-1:
                 self.save_model(os.path.join(save_model_weight_dir, f'actor_{episode+1}_fixed.h5'), os.path.join(save_model_weight_dir, f'critic_{episode+1}_fixed.h5'))
             
-        self.save_rewards('./results/rewards.csv')
+        self.episodic_reward_history = self.convert_to_serializable(self.episodic_reward_history)
+        self.save_reward_history('results/rewards/', self.episodic_reward_history)
 
     def save_model(self, actor_path, critic_path):
         self.actor.save_weights(actor_path)
@@ -374,7 +376,21 @@ class DRRAgent:
         self.actor.load_weights(actor_path)
         self.critic.load_weights(critic_path)
 
-    def save_rewards(self, file_path):
-        with open(file_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(self.episodic_reward_history)
+    def save_reward_history(self, path, rewards):
+        # Garantir que o diretório exista
+        if not os.path.exists(path):
+            os.makedirs(path)
+        
+        # Salvar o histórico de recompensas
+        file_path = os.path.join(path, f"rewards-{datetime.now().strftime('%Y-%m-%d-%H')}.json")
+        with open(file_path, 'w') as arquivo_json:
+            json.dump(rewards, arquivo_json)
+            
+    # Função para converter np.int64 para int, mantendo outros tipos inalterados
+    def convert_to_serializable(self, obj):
+        if isinstance(obj, np.int64):
+            return int(obj)
+        elif isinstance(obj, list):
+            return [self.convert_to_serializable(item) for item in obj]
+        else:
+            return obj

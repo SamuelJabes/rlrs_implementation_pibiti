@@ -36,7 +36,7 @@ class Env():
         
     def step(self, action, top_k=False):
 
-        reward = 0
+        reward = -0.5
         
         if top_k:
             correctly_recommended = []
